@@ -5,26 +5,44 @@ import matplotlib
 matplotlib.use('TkAgg')
 
 
-def GetMask(image):
-    # You can add any number of points by using
-    # mouse left click. Delete points with mouse
-    # right click and finish adding by mouse
-    # middle click.  More info:
-    # https://matplotlib.org/api/_as_gen/matplotlib.pyplot.ginput.html
+# def GetMask(image):
+#     # You can add any number of points by using
+#     # mouse left click. Delete points with mouse
+#     # right click and finish adding by mouse
+#     # middle click.  More info:
+#     # https://matplotlib.org/api/_as_gen/matplotlib.pyplot.ginput.html
 
+#     plt.imshow(image)
+#     plt.axis('image')
+#     points = plt.ginput(-1, timeout=-1)
+#     plt.close()
+
+#     # The code below is based on this answer from stackoverflow
+#     # https://stackoverflow.com/a/15343106
+
+#     mask = np.zeros(image.shape, dtype=np.uint8)
+#     roi_corners = np.array([points], dtype=np.int32)
+#     # fill the ROI so it doesn't get wiped out when the mask is applied
+#     channel_count = image.shape[2]  # i.e. 3 or 4 depending on your image
+#     ignore_mask_color = (255,)*channel_count
+#     cv2.fillPoly(mask, roi_corners, ignore_mask_color)
+
+#     return mask
+
+def GetMask(image):
     plt.imshow(image)
     plt.axis('image')
-    points = plt.ginput(-1, timeout=-1)
+    points = plt.ginput(2, timeout=-1)
     plt.close()
 
-    # The code below is based on this answer from stackoverflow
-    # https://stackoverflow.com/a/15343106
+    (x1, y1), (x2, y2) = points
+    points.append((x2, y1))
+    points.append((x1, y2))
 
-    mask = np.zeros(image.shape, dtype=np.uint8)
-    roi_corners = np.array([points], dtype=np.int32)
-    # fill the ROI so it doesn't get wiped out when the mask is applied
-    channel_count = image.shape[2]  # i.e. 3 or 4 depending on your image
-    ignore_mask_color = (255,)*channel_count
-    cv2.fillPoly(mask, roi_corners, ignore_mask_color)
-
-    return mask
+    mask = np.zeros_like(image)
+    cv2.rectangle(mask, (int(x1), int(y1)),
+                  (int(x2), int(y2)), (255, 255, 255), -1)
+    cv2.fillPoly(mask, np.array([points], dtype=np.int32), (255, 255, 255))
+    # plt.imshow(mask)
+    # plt.show()
+    return mask, points
