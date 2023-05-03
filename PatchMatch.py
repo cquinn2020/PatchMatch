@@ -44,15 +44,14 @@ def find_best_match(image, border_patch, patch_size, mask):
     best_score = float("inf")
     best_x, best_y = -1, -1
 
-    for y in range(image.shape[0] - patch_size[0]):
-        for x in range(image.shape[1] - patch_size[1]):
-            if (mask[y][x][0] == 1) or (mask[y + patch_size[0]][x + patch_size[1]][0] == 1):
-                print("skipping")
-                continue
-            # if the patch is at the edge, skip it
-            if x < 0 or y < 0 or x + patch_size[1] >= image.shape[1] or y + patch_size[0] >= image.shape[0]:
-                continue
+    for y in range(image.shape[0] - patch_size[0] + 1):
+        for x in range(image.shape[1] - patch_size[1] + 1):
             patch = extract_patch(image, x, y, patch_size[0], patch_size[1])
+            patch_mask = extract_patch(mask, x, y, patch_size[0], patch_size[1])
+            
+            if np.any(patch_mask == 1):
+                continue
+
             score = similarity_score(border_patch, patch)
             if score < best_score:
                 best_score = score
@@ -103,3 +102,4 @@ if __name__ == '__main__':
     source[int(y1):int(y2), int(x1):int(x2)] = source_patch
 
     plt.imsave(outputDir + outputname, source)
+    print("Done")
