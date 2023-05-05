@@ -10,6 +10,9 @@ import copy
 
 matplotlib.use('TkAgg')
 
+# Define Poisson blending function
+# Thise code is from Ezra Lane's previous assignment on Poisson blending
+
 
 def PoissonBlend(source, mask, target, isMix=False):
     target = np.array(target)
@@ -119,9 +122,14 @@ def Read(path="", source_filename=""):
     # mask = mask.astype(np.float32) / info.max
     return source, mask, points
 
+# This function find the similarity score between two patches
+
 
 def similarity_score(patch1, patch2):
     return np.sum((patch1 - patch2) ** 2)
+
+# This function extracts a patch from an image to be used
+# for comparison in the rest of the algorithm
 
 
 def extract_patch(image, x, y, patch_height, patch_width):
@@ -132,25 +140,37 @@ def extract_patch(image, x, y, patch_height, patch_width):
     patch_width = int(patch_width)
     return image[y:y+patch_height, x:x+patch_width]
 
+# Function to find the best match for a given patch in the source image
+
 
 def find_best_match(image, border_patch, patch_size, mask):
+    # Initialize the best score to positive infinity and the best patch coordinates to -1
     best_score = float("inf")
     best_x, best_y = -1, -1
 
+    # Loop through all possible y coordinates in the image
     for y in range(image.shape[0] - patch_size[0] + 1):
+        # Loop through all possible x coordinates in the image
         for x in range(image.shape[1] - patch_size[1] + 1):
+            # Extract a patch from the image at the current (x, y) position
             patch = extract_patch(image, x, y, patch_size[0], patch_size[1])
+            # Extract a corresponding patch from the mask
             patch_mask = extract_patch(
                 mask, x, y, patch_size[0], patch_size[1])
 
+            # If any part of the mask patch has a value of 1, skip this patch
             if np.any(patch_mask == 1):
                 continue
 
+            # Calculate the similarity score between the border_patch and the current patch
             score = similarity_score(border_patch, patch)
+
+            # If the calculated score is better than the best_score, update best_score and best_x, best_y coordinates
             if score < best_score:
                 best_score = score
                 best_x, best_y = x, y
 
+    # Return the best matching patch's top-left corner (x, y) coordinates
     return best_x, best_y
 
 
@@ -174,9 +194,6 @@ if __name__ == '__main__':
     mask = np.ones_like(maskOriginal)
     mask[maskOriginal < 0.5] = 0
 
-    # plt.imshow(mask)
-    # plt.show()
-
     plt.imsave('testMask.png', mask, cmap='gray')
     initial_patch = extract_patch(source, x1, y1, y2-y1, x2-x1)
     border_size = 5
@@ -188,9 +205,6 @@ if __name__ == '__main__':
     mask_area_height, mask_area_width = y2 - y1, x2 - x1
     source_patch = extract_patch(
         source, best_x + border_size, best_y + border_size, mask_area_height, mask_area_width)
-
-    plt.imsave('source_patch.png', source_patch)
-    plt.imsave('initial_patch.png', initial_patch)
 
     temp = copy.deepcopy(source)
 
