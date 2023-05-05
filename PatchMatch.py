@@ -155,6 +155,8 @@ def find_best_match(image, border_patch, patch_size, mask):
 
 
 if __name__ == '__main__':
+    print("Welcome to the Image Inpainting Program")
+
     # Setting up the input output paths
     inputDir = 'Images/'
     outputDir = 'Results/'
@@ -175,7 +177,7 @@ if __name__ == '__main__':
     # plt.imshow(mask)
     # plt.show()
 
-    plt.imsave('beach_mask.png', mask, cmap='gray')
+    plt.imsave('testMask.png', mask, cmap='gray')
     initial_patch = extract_patch(source, x1, y1, y2-y1, x2-x1)
     border_size = 5
     border_patch = extract_patch(
@@ -189,12 +191,11 @@ if __name__ == '__main__':
 
     plt.imsave('source_patch.png', source_patch)
     plt.imsave('initial_patch.png', initial_patch)
-    #make source_patch the same size as y1:y2, x1:x2
 
     temp = copy.deepcopy(source)
-    
-    
-    resized_source_patch = cv2.resize(source_patch, (int(x2) - int(x1), int(y2) - int(y1)))
+
+    resized_source_patch = cv2.resize(
+        source_patch, (int(x2) - int(x1), int(y2) - int(y1)))
     source[int(y1):int(y2), int(x1):int(x2)] = resized_source_patch
 
     final = PoissonBlend(source, mask, temp)
