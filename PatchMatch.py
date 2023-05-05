@@ -11,7 +11,7 @@ import copy
 matplotlib.use('TkAgg')
 
 # Define Poisson blending function
-# Thise code is from Ezra Lane's previous assignment on Poisson blending
+# This function's code (def PoissonBlen()) is from Ezra Lane's previous assignment on Poisson blending
 
 
 def PoissonBlend(source, mask, target, isMix=False):
@@ -115,11 +115,6 @@ def Read(path="", source_filename=""):
     # normalize the image into range 0 and 1
     source = source.astype(np.float32) / info.max
     mask, points = GetMask(source)
-
-    # get information about the image type (min max values)
-    # info = np.iinfo(mask.dtype)
-    # # normalize the image into range 0 and 1
-    # mask = mask.astype(np.float32) / info.max
     return source, mask, points
 
 # This function find the similarity score between two patches
@@ -133,7 +128,7 @@ def similarity_score(patch1, patch2):
 
 
 def extract_patch(image, x, y, patch_height, patch_width):
-
+    # Extract a patch of size patch_height x patch_width from image whose top left corner is at (x, y)
     x = int(x)
     y = int(y)
     patch_height = int(patch_height)
@@ -193,26 +188,30 @@ if __name__ == '__main__':
     # Cleaning up the mask (creating a binary mask)
     mask = np.ones_like(maskOriginal)
     mask[maskOriginal < 0.5] = 0
-
-    plt.imsave('testMask.png', mask, cmap='gray')
+    
+    plt.imsave('mask.png', mask, cmap='gray')
+    # Extracting the patch from the source image
     initial_patch = extract_patch(source, x1, y1, y2-y1, x2-x1)
     border_size = 5
+    # Extracting the border patch from the source image
     border_patch = extract_patch(
         source, x1 - border_size, y1 - border_size, (y2-y1)+2*border_size, (x2 - x1) + 2 * border_size)
+    # Finding the best match for the border patch in the source image
     best_x, best_y = find_best_match(
         source, border_patch, border_patch.shape, mask)
-
+    # Extracting the best match patch from the source image
     mask_area_height, mask_area_width = y2 - y1, x2 - x1
     source_patch = extract_patch(
         source, best_x + border_size, best_y + border_size, mask_area_height, mask_area_width)
-
+    # Copying the source patch to the target image
     temp = copy.deepcopy(source)
-
+    # Resizing the source patch to fit the target patch
     resized_source_patch = cv2.resize(
         source_patch, (int(x2) - int(x1), int(y2) - int(y1)))
+    # Copying the resized source patch to the target image
     source[int(y1):int(y2), int(x1):int(x2)] = resized_source_patch
-
+    #Using Poisson Blending to blend the source and target images
     final = PoissonBlend(source, mask, temp)
-
+    # Saving the final image
     plt.imsave(outputDir + outputname, final)
     print("Done")
